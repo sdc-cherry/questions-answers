@@ -221,9 +221,75 @@ const reportQuestion = async(req, res) => {
 //   })
 // };
 const getAnswers = async(req, res) => {
+  console.log(req.query);
+  let page, count, queryA, valueA, offset;
+  let query = 'select * from answers where question_id=$1 order by id ASC';
   try {
-    const results = await pool.query('select * from answers where question_id=$1 order by id ASC',[req.params.question_id]);
-    res.status(200).send(results.rows);
+    if (!req.query.page) {
+      page = 1;
+    } else {
+      page = Number(req.query.page);
+    }
+    if (!req.query.count) {
+      count = 5;
+    } else {
+      count = Number(req.query.count);
+    }
+    if (page === 1) {
+      offset = '';
+    } else {
+      offset = ' OFFSET ' + count * (page - 1);
+    }
+
+    console.log(req.query.page, page, req.query.count, count)
+    queryA = query + ' limit $2' + offset;
+    valueA = [req.params.question_id, count];
+
+    const answers = await pool.query(queryA, valueA);
+
+    let photosPromises = [];
+    let convertedAnswers = [];
+    let results = {};
+    for (let i = 0; i < answers.rows.length; i++) {
+      console.log(i);
+      photosPromises[i] = pool.query('select * from answers_photos where answer_id=$1', [answers.rows[i].id]);
+    };
+    Promise.all(photosPromises)
+      .then( photosData => {
+        // let allPhotos = photosData.map( photoData => (photoData.rows) )
+        let allPhotos = photosData.map( photoData => {
+          return photoData.rows.map( photoD => {
+            let convertedPhoto = {
+              id: photoD.id,
+              url: photoD.url
+            }
+            return convertedPhoto;
+          } )
+        } );
+
+        console.log('inside promise', allPhotos[0])
+        // console.log('allPhotos', allPhotos)
+        convertedAnswers = allPhotos.map((photo, index) => {
+          let answer = answers.rows[index];
+          return {
+            "answer_id": answer.id,
+            "body": answer.body,
+            "date": answer.date_written,
+            "answerer_name": answer.answerer_name,
+            "answerer_email": answer.answerer_email,
+            "helpfulness": answer.helpful,
+            "reported": answer.reported,
+            "photos": photo
+          }
+        });
+        results = {
+          question: req.params.question_id.toString(),
+          page: page,
+          count: count,
+          results: convertedAnswers
+        };
+        res.status(200).send(results);
+      } )
   } catch (err) {
     res.status(500).send({message: err.message});
   }

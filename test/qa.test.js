@@ -71,9 +71,9 @@ describe("Test todo methods", () => {
   it("should return serial check from product_id to answers_photos", async () => {
       await request(app)
       .get("/sdc/check")
-      // .expect(200)
+      .expect(200)
       .then((response) => {
-        expect(response.body.length).toBe(4);
+        // expect(response.body.length).toBe(4);
         expect(response.body[1].question_id).toBe(607);
         expect(response.body[1].answerer_name).toBe("Minnie_Smitham");
         expect(response.body[1].url).toBe("https://images.unsplash.com/photo-1556304653-cba65c59b3c5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=2761&q=80");

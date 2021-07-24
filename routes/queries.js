@@ -11,15 +11,9 @@ const pool = new Pool({
   port: 5432,
 });
 
-// const getProductTb = (req, res) => {
-//   pool.query('select * from product where id=188', (error, results) => {
-//     if (error) {
-//       // throw error;
-//       res.status(500).send({message: err.message});
-//     }
-//     res.status(200).json(results.rows)
-//   })
-// };
+
+// Check DB and Relations //
+
 const getProductTb = async(req, res) => {
   try {
     const results = await pool.query('select * from product where id=188');
@@ -29,15 +23,6 @@ const getProductTb = async(req, res) => {
   }
 };
 
-
-// const getQuestionsTb = (req, res) => {
-//   pool.query('select * from questions where product_id=188 order by id ASC', (error, results) => {
-//     if (error) {
-//       throw error;
-//     }
-//     res.status(200).json(results.rows)
-//   })
-// };
 const getQuestionsTb = async(req, res) => {
   try {
     const results = await pool.query('select * from questions where product_id=188 order by id ASC');
@@ -47,15 +32,6 @@ const getQuestionsTb = async(req, res) => {
   }
 };
 
-
-// const getAnswersTb = (req, res) => {
-//   pool.query('select * from answers where question_id=607 order by id ASC', (error, results) => {
-//     if (error) {
-//       throw error;
-//     }
-//     res.status(200).json(results.rows)
-//   })
-// };
 const getAnswersTb = async(req, res) => {
   try {
     const results = await pool.query('select * from answers where question_id=607 order by id ASC');
@@ -65,15 +41,6 @@ const getAnswersTb = async(req, res) => {
   }
 };
 
-
-// const getAnswers_photosTb = (req, res) => {
-//   pool.query('select * from answers_photos where answer_id=1202', (error, results) => {
-//     if (error) {
-//       throw error;
-//     }
-//     res.status(200).json(results.rows)
-//   })
-// };
 const getAnswers_photosTb = async(req, res) => {
   try {
     const results = await pool.query('select * from answers_photos where answer_id=1202');
@@ -83,18 +50,6 @@ const getAnswers_photosTb = async(req, res) => {
   }
 };
 
-
-// const getCheckTb = (req, res) => {
-//   let query = "SELECT q.id as q_id, product_id, q.body, q.date_written, asker_name, asker_email, q.reported as q_reported, q.helpful as q_helpful, a.id as a_id, question_id, a.body as a_body, a.date_written as a_date_written, answerer_name, answerer_email, a.reported as a_reported, a.helpful as a_helpful, ap.id as ap_id, answer_id, url FROM questions q INNER JOIN answers a ON question_id = q.id INNER JOIN answers_photos ap ON answer_id = a.id WHERE product_id = 188 ORDER by ap.id ASC;";
-
-//   pool.query(query, (error, results) => {
-//     if (error) {
-//       throw error;
-//     }
-//     // console.log(results.rows[1].id);
-//     res.status(200).json(results.rows)
-//   })
-// };
 const getCheckTb = async(req, res) => {
   try {
     const results = await pool.query('SELECT q.id as q_id, product_id, q.body, q.date_written, asker_name, asker_email, q.reported as q_reported, q.helpful as q_helpful, a.id as a_id, question_id, a.body as a_body, a.date_written as a_date_written, answerer_name, answerer_email, a.reported as a_reported, a.helpful as a_helpful, ap.id as ap_id, answer_id, url FROM questions q INNER JOIN answers a ON question_id = q.id INNER JOIN answers_photos ap ON answer_id = a.id WHERE product_id = 188 ORDER by ap.id ASC;');
@@ -108,14 +63,6 @@ const getCheckTb = async(req, res) => {
 // REAL WORK //
 
 // app.get('/products', db.getProducts);
-// const getProducts = (req, res) => {
-//   pool.query('select * from product where id=188', (error, results) => {
-//     if (error) {
-//       throw error;
-//     }
-//     res.status(200).json(results.rows)
-//   })
-// };
 const getProducts = async(req, res) => {
   try {
     const results = await pool.query('select * from product where id=188');
@@ -129,14 +76,6 @@ const getProducts = async(req, res) => {
 
 // # '/qa/questions': questions.jsx. 'qa/questions?product_id=22122&page=1&count=5'
 // app.get('/qa/questions?product_id=28212', db.getQuestions);
-// const getQuestions = (req, res) => {
-//   pool.query('select * from questions where product_id=188 order by id ASC', (error, results) => {
-//     if (error) {
-//       throw error;
-//     }
-//     res.status(200).json(results.rows)
-//   })
-// };
 const getQuestions = async(req, res) => {
   try {
     // console.log('req.query', req.query);
@@ -148,24 +87,9 @@ const getQuestions = async(req, res) => {
   }
 };
 
+
 // # '/qa/questions': addQuestion.jsx
 // app.post('/qa/questions?product_id=28212', db.addQuestion);
-// const addQuestion = (req, res) => {
-//   console.log('req.body', req.body);
-
-//   const { product_id, body, asker_name, asker_email } = req.body;
-//   const query = 'INSERT INTO questions (product_id, body, asker_name, asker_email) VALUES ($1, $2, $3, $4) RETURNING id';
-//   const value = [product_id, body, asker_name, asker_email];
-
-//   pool.query(query, value, (error, results) => {
-//     if (error) {
-//       throw error;
-//     }
-//     // res.status(201).send(`New question added for product_id: ${product_id}`);
-//     res.status(201).send(`New question added with ID:${results.rows[0].id} `);
-//   });
-// }
-
 const addQuestion = async(req, res) => {
   try {
     // console.log('req.body', req.body);
@@ -212,14 +136,6 @@ const reportQuestion = async(req, res) => {
 
 // `/qa/questions/${this.props.questionId}/answers`: answerlist.jsx
 // app.get('/qa/questions/213336/answers', db.getAnswers);
-// const getAnswers = (req, res) => {
-//   pool.query('select * from answers where question_id=607 order by id ASC', (error, results) => {
-//     if (error) {
-//       throw error;
-//     }
-//     res.status(200).json(results.rows)
-//   })
-// };
 const getAnswers = async(req, res) => {
   console.log(req.query);
   let page, count, queryA, valueA, offset;
@@ -240,8 +156,8 @@ const getAnswers = async(req, res) => {
     } else {
       offset = ' OFFSET ' + count * (page - 1);
     }
-
-    console.log(req.query.page, page, req.query.count, count)
+    let forQestion = false;
+    // console.log(req.query.page, page, req.query.count, count)
     queryA = query + ' limit $2' + offset;
     valueA = [req.params.question_id, count];
 
@@ -251,7 +167,6 @@ const getAnswers = async(req, res) => {
     let convertedAnswers = [];
     let results = {};
     for (let i = 0; i < answers.rows.length; i++) {
-      console.log(i);
       photosPromises[i] = pool.query('select * from answers_photos where answer_id=$1', [answers.rows[i].id]);
     };
     Promise.all(photosPromises)
@@ -266,8 +181,6 @@ const getAnswers = async(req, res) => {
             return convertedPhoto;
           } )
         } );
-
-        console.log('inside promise', allPhotos[0])
         // console.log('allPhotos', allPhotos)
         convertedAnswers = allPhotos.map((photo, index) => {
           let answer = answers.rows[index];
@@ -288,7 +201,11 @@ const getAnswers = async(req, res) => {
           count: count,
           results: convertedAnswers
         };
-        res.status(200).send(results);
+        if (forQestion) {
+          return results;
+        } else {
+          res.status(200).send(results);
+        }
       } )
   } catch (err) {
     res.status(500).send({message: err.message});
@@ -304,7 +221,6 @@ const getAnswers = async(req, res) => {
 //   "email": "answerer@gmail.com",
 //   "photos": []
 // }
-
 const addAnswer = async(req, res) => {
   try {
     console.log('req.body', req.body);
@@ -351,10 +267,6 @@ const reportAnswer = async(req, res) => {
     // throw err;
   }
 };
-
-
-
-
 
 module.exports = {
   getProductTb,

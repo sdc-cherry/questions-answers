@@ -76,11 +76,103 @@ const getProducts = async(req, res) => {
 
 // # '/qa/questions': questions.jsx. 'qa/questions?product_id=22122&page=1&count=5'
 // app.get('/qa/questions?product_id=28212', db.getQuestions);
+// const getQuestions = async(req, res) => {
+//   try {
+//     // console.log('req.query', req.query);
+//     const results = await pool.query('select * from questions where product_id=$1 order by id ASC', [req.query.product_id]);
+//     res.status(200).send(results.rows);
+//   } catch (err) {
+//     res.status(500).send({message: err.message});
+//     // throw err;
+//   }
+// };
+
 const getQuestions = async(req, res) => {
   try {
-    // console.log('req.query', req.query);
-    const results = await pool.query('select * from questions where product_id=$1 order by id ASC', [req.query.product_id]);
-    res.status(200).send(results.rows);
+    // let queryA = 'select * from answers where question_id=$1 order by id ASC';
+    // let question_idA = 606;
+    // valueA = [question_idA];
+
+    // // same to getAnswers
+    // getAnswersFn(queryA, valueA, false, aReq, res);
+
+    // // for getQuestions
+    // getAnswersFn(queryA, valueA, true, question_idA, res)
+    //   .then ( aresults => {
+    //     console.log('aresults', aresults);
+    //     res.status(200).send(aresults);
+    //   })
+    // OR
+    // let aresults = await getAnswersFn(queryA, valueA, true, question_idA);
+    // res.status(200).send(aresults);
+
+    const queryA = 'select * from answers where question_id=$1 order by id ASC';
+    let question_idA, valueA;
+    let answersPromises = [];
+    let convertedQuestions = [];
+    let convertedAnswer = {};
+    let results = {};
+    let allAnswers = {};
+
+    const questions = await pool.query('select * from questions where product_id=$1 order by id ASC', [req.query.product_id]);
+    let allQuestions = questions.rows;
+
+    for (let i = 0; i < questions.rows.length; i++) {
+      // questionPromises[i] = pool.query('select * from answers_photos where answer_id=$1', [questions.rows[i].id]);
+      question_idA = questions.rows[i].id;
+      valueA = [question_idA];
+      answersPromises[i] = getAnswersFn(queryA, valueA, true, question_idA);
+    };
+
+    return Promise.all(answersPromises)
+      .then( answersData => {
+        // let allPhotos = photosData.map( photoData => (photoData.rows) )
+        answersData.map( answerData => {
+          answerData.results.forEach( answerD => {
+            convertedAnswer[answerD.answer_id] = {
+              id: answerD.answer_id,
+              body: answerD.body,
+              date: answerD.date,
+              answerer_name: answerD.answerer_name,
+              answerer_email: answerD.answerer_email,
+              helpfulness: answerD.helpfulness,
+              reported: answerD.reported,
+              photos: answerD.photos.map(photo => (photo.url))
+            }
+            // return convertedAnswer;
+          } )
+        } );
+        // let convertedQuestions = {
+        //   question_id: 213336,
+        //   question_body: "How long does it last?",
+        //   question_date: "2019-07-06T00:00:00.000Z",
+        //   asker_name: "funnygirl",
+        //   question_helpfulness: 6,
+        //   reported: false,
+        //   answers: convertedAnswer
+        // }
+        convertedQuestions = allQuestions.map((question, index) => {
+          // let question = questions.rows[index];
+          return {
+            question_id: question.id,
+            question_body: question.body,
+            question_date: question.date_written,
+            asker_name: question.asker_name,
+            asker_email: question.asker_email,
+            question_helpfulness: question.helpful,
+            reported: question.reported,
+            answers: convertedAnswer
+          }
+        });
+        results = {
+          product_id: req.query.product_id.toString(),
+          results: convertedQuestions
+        };
+        res.status(200).send(results);
+        // res.status(200).send(answersData[0]);
+        // res.status(200).send(convertedAnswer);
+      })
+
   } catch (err) {
     res.status(500).send({message: err.message});
     // throw err;
@@ -134,6 +226,55 @@ const reportQuestion = async(req, res) => {
   }
 };
 
+
+const getAnswersFn = async(queryA, valueA, forQestion, question_id, res, page, count, offset) => {
+  const answers = await pool.query(queryA, valueA);
+
+    let photosPromises = [];
+    let convertedAnswers = [];
+    let results = {};
+    for (let i = 0; i < answers.rows.length; i++) {
+      photosPromises[i] = pool.query('select * from answers_photos where answer_id=$1', [answers.rows[i].id]);
+    };
+    return Promise.all(photosPromises)
+      .then( photosData => {
+        // let allPhotos = photosData.map( photoData => (photoData.rows) )
+        let allPhotos = photosData.map( photoData => {
+          return photoData.rows.map( photoD => {
+            let convertedPhoto = {
+              id: photoD.id,
+              url: photoD.url
+            }
+            return convertedPhoto;
+          } )
+        } );
+        // console.log('allPhotos', allPhotos)
+        convertedAnswers = allPhotos.map((photo, index) => {
+          let answer = answers.rows[index];
+          return {
+            answer_id: answer.id,
+            body: answer.body,
+            date: answer.date_written,
+            answerer_name: answer.answerer_name,
+            answerer_email: answer.answerer_email,
+            helpfulness: answer.helpful,
+            reported: answer.reported,
+            photos: photo
+          }
+        });
+        results = {
+          question: question_id.toString(),
+          page: page,
+          count: count,
+          results: convertedAnswers
+        };
+        if (!forQestion) {
+          res.status(200).send(results);
+        }
+        return results;
+      } )
+};
+
 // `/qa/questions/${this.props.questionId}/answers`: answerlist.jsx
 // app.get('/qa/questions/213336/answers', db.getAnswers);
 const getAnswers = async(req, res) => {
@@ -156,57 +297,12 @@ const getAnswers = async(req, res) => {
     } else {
       offset = ' OFFSET ' + count * (page - 1);
     }
-    let forQestion = false;
     // console.log(req.query.page, page, req.query.count, count)
     queryA = query + ' limit $2' + offset;
+    let question_idA = req.params.question_id;
     valueA = [req.params.question_id, count];
 
-    const answers = await pool.query(queryA, valueA);
-
-    let photosPromises = [];
-    let convertedAnswers = [];
-    let results = {};
-    for (let i = 0; i < answers.rows.length; i++) {
-      photosPromises[i] = pool.query('select * from answers_photos where answer_id=$1', [answers.rows[i].id]);
-    };
-    Promise.all(photosPromises)
-      .then( photosData => {
-        // let allPhotos = photosData.map( photoData => (photoData.rows) )
-        let allPhotos = photosData.map( photoData => {
-          return photoData.rows.map( photoD => {
-            let convertedPhoto = {
-              id: photoD.id,
-              url: photoD.url
-            }
-            return convertedPhoto;
-          } )
-        } );
-        // console.log('allPhotos', allPhotos)
-        convertedAnswers = allPhotos.map((photo, index) => {
-          let answer = answers.rows[index];
-          return {
-            "answer_id": answer.id,
-            "body": answer.body,
-            "date": answer.date_written,
-            "answerer_name": answer.answerer_name,
-            "answerer_email": answer.answerer_email,
-            "helpfulness": answer.helpful,
-            "reported": answer.reported,
-            "photos": photo
-          }
-        });
-        results = {
-          question: req.params.question_id.toString(),
-          page: page,
-          count: count,
-          results: convertedAnswers
-        };
-        if (forQestion) {
-          return results;
-        } else {
-          res.status(200).send(results);
-        }
-      } )
+    getAnswersFn(queryA, valueA, false, question_idA, res, page, count, offset);
   } catch (err) {
     res.status(500).send({message: err.message});
   }

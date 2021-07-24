@@ -60,7 +60,7 @@ const getCheckTb = async(req, res) => {
 };
 
 
-// REAL WORK //
+// REAL WORK using promises//
 
 // app.get('/products', db.getProducts);
 const getProducts = async(req, res) => {
@@ -76,102 +76,86 @@ const getProducts = async(req, res) => {
 
 // # '/qa/questions': questions.jsx. 'qa/questions?product_id=22122&page=1&count=5'
 // app.get('/qa/questions?product_id=28212', db.getQuestions);
-// const getQuestions = async(req, res) => {
-//   try {
-//     // console.log('req.query', req.query);
-//     const results = await pool.query('select * from questions where product_id=$1 order by id ASC', [req.query.product_id]);
-//     res.status(200).send(results.rows);
-//   } catch (err) {
-//     res.status(500).send({message: err.message});
-//     // throw err;
-//   }
-// };
-
 const getQuestions = async(req, res) => {
   try {
-    // let queryA = 'select * from answers where question_id=$1 order by id ASC';
-    // let question_idA = 606;
-    // valueA = [question_idA];
-
-    // // same to getAnswers
-    // getAnswersFn(queryA, valueA, false, aReq, res);
-
-    // // for getQuestions
-    // getAnswersFn(queryA, valueA, true, question_idA, res)
-    //   .then ( aresults => {
-    //     console.log('aresults', aresults);
-    //     res.status(200).send(aresults);
-    //   })
-    // OR
-    // let aresults = await getAnswersFn(queryA, valueA, true, question_idA);
-    // res.status(200).send(aresults);
-
     const queryA = 'select * from answers where question_id=$1 order by id ASC';
     let question_idA, valueA;
+
     let answersPromises = [];
     let convertedQuestions = [];
-    let convertedAnswer = {};
+    let allAnswers = [];
     let results = {};
-    let allAnswers = {};
 
-    const questions = await pool.query('select * from questions where product_id=$1 order by id ASC', [req.query.product_id]);
+    //
+    console.log(req.query);
+    let page, count, queryQ, valueQ, offset;
+    let query = 'select * from questions where product_id=$1 and reported=false order by id ASC';
+
+    if (!req.query.page) {
+      page = 1;
+    } else {
+      page = Number(req.query.page);
+    }
+    if (!req.query.count) {
+      count = 4;
+    } else {
+      count = Number(req.query.count);
+    }
+    if (page === 1) {
+      offset = '';
+    } else {
+      offset = ' OFFSET ' + count * (page - 1);
+    }
+    // console.log(req.query.page, page, req.query.count, count)
+    queryQ = query + ' limit $2' + offset;
+    let product_id = req.query.product_id;
+    valueQ = [req.query.product_id, count];
+    // getAnswersFn(queryQ, valueQ, false, question_idA, res, page, count, offset);
+    //
+
+    const questions = await pool.query(queryQ, valueQ);
     let allQuestions = questions.rows;
 
     for (let i = 0; i < questions.rows.length; i++) {
-      // questionPromises[i] = pool.query('select * from answers_photos where answer_id=$1', [questions.rows[i].id]);
       question_idA = questions.rows[i].id;
       valueA = [question_idA];
       answersPromises[i] = getAnswersFn(queryA, valueA, true, question_idA);
     };
 
     return Promise.all(answersPromises)
-      .then( answersData => {
-        // let allPhotos = photosData.map( photoData => (photoData.rows) )
-        answersData.map( answerData => {
-          answerData.results.forEach( answerD => {
-            convertedAnswer[answerD.answer_id] = {
-              id: answerD.answer_id,
-              body: answerD.body,
-              date: answerD.date,
-              answerer_name: answerD.answerer_name,
-              answerer_email: answerD.answerer_email,
-              helpfulness: answerD.helpfulness,
-              reported: answerD.reported,
-              photos: answerD.photos.map(photo => (photo.url))
-            }
-            // return convertedAnswer;
-          } )
-        } );
-        // let convertedQuestions = {
-        //   question_id: 213336,
-        //   question_body: "How long does it last?",
-        //   question_date: "2019-07-06T00:00:00.000Z",
-        //   asker_name: "funnygirl",
-        //   question_helpfulness: 6,
-        //   reported: false,
-        //   answers: convertedAnswer
-        // }
-        convertedQuestions = allQuestions.map((question, index) => {
-          // let question = questions.rows[index];
-          return {
-            question_id: question.id,
-            question_body: question.body,
-            question_date: question.date_written,
-            asker_name: question.asker_name,
-            asker_email: question.asker_email,
-            question_helpfulness: question.helpful,
-            reported: question.reported,
-            answers: convertedAnswer
+    .then( answersData => {
+      allAnswers = answersData.map( (answerData, index) => {
+        let convertedAnswer = {};
+        answerData.results.forEach( answerD => {
+          convertedAnswer[answerD.answer_id] = {
+            id: answerD.answer_id,
+            body: answerD.body,
+            date: answerD.date,
+            answerer_name: answerD.answerer_name,
+            answerer_email: answerD.answerer_email,
+            helpfulness: answerD.helpfulness,
+            reported: answerD.reported,
+            photos: answerD.photos.map(photo => (photo.url))
           }
-        });
-        results = {
-          product_id: req.query.product_id.toString(),
-          results: convertedQuestions
-        };
-        res.status(200).send(results);
-        // res.status(200).send(answersData[0]);
-        // res.status(200).send(convertedAnswer);
-      })
+        } );
+        let question = questions.rows[index];
+        convertedQuestions[index] = {
+          question_id: question.id,
+          question_body: question.body,
+          question_date: question.date_written,
+          asker_name: question.asker_name,
+          asker_email: question.asker_email,
+          question_helpfulness: question.helpful,
+          reported: question.reported,
+          answers: convertedAnswer
+        }
+      } );
+      results = {
+        product_id: req.query.product_id.toString(),
+        results: convertedQuestions
+      };
+      res.status(200).send(results);
+    })
 
   } catch (err) {
     res.status(500).send({message: err.message});
@@ -280,7 +264,7 @@ const getAnswersFn = async(queryA, valueA, forQestion, question_id, res, page, c
 const getAnswers = async(req, res) => {
   console.log(req.query);
   let page, count, queryA, valueA, offset;
-  let query = 'select * from answers where question_id=$1 order by id ASC';
+  let query = 'select * from answers where question_id=$1 and reported=false order by id ASC';
   try {
     if (!req.query.page) {
       page = 1;

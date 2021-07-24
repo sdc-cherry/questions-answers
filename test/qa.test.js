@@ -1,11 +1,11 @@
-const cloneArray = require('./init');
+// const cloneArray = require('./init');
 
-test('properly clones array using toBe', () => {
-  const array = [1,2,3];
-  expect(cloneArray(array)).toEqual(array);
-  expect(cloneArray(array)).toStrictEqual(array);
-  expect(cloneArray(array)).not.toBe(array);
-})
+// test('properly clones array using toBe', () => {
+//   const array = [1,2,3];
+//   expect(cloneArray(array)).toEqual(array);
+//   expect(cloneArray(array)).toStrictEqual(array);
+//   expect(cloneArray(array)).not.toBe(array);
+// })
 
 const request = require("supertest");
 const app = require('../server/index.js')
@@ -14,14 +14,7 @@ const app = require('../server/index.js')
 
 // jest.setTimeout(15000);
 
-describe("Test todo methods", () => {
-
-//   it("should return all answers", async (done) => {
-//     const response = await request(app).get("/sdc/answers")
-//     expect(response.body.length).toBe(8);
-//     done();
-//   });
-
+describe("Test DB and Relations", () => {
 
   it("should return searched product", async () => {
     await request(app)
@@ -38,7 +31,7 @@ describe("Test todo methods", () => {
     .get("/sdc/questions")
     .expect(200)
     .then((response) => {
-        expect(response.body.length).toBe(6);
+        // expect(response.body.length).toBe(6);
         expect(response.body[1].id).toBe(607);
         expect(response.body[1].body).toBe("Minima itaque quod minus assumenda possimus.");
     });
@@ -52,6 +45,67 @@ describe("Test todo methods", () => {
         expect(response.body.length).toBe(3);
         expect(response.body[1].id).toBe(1202);
         expect(response.body[1].answerer_name).toBe("Minnie_Smitham");
+    });
+  });
+
+  it("should return all answers_photos", async () => {
+      await request(app)
+      .get("/sdc/answers_photos")
+      .expect(200)
+      .then((response) => {
+        expect(response.body.length).toBe(1);
+        expect(response.body[0].id).toBe(351);
+        expect(response.body[0].url).toBe("https://images.unsplash.com/photo-1556304653-cba65c59b3c5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=2761&q=80");
+      });
+  });
+
+
+
+  it("should return serial check from product_id to answers_photos", async () => {
+      await request(app)
+      .get("/sdc/check")
+      .expect(200)
+      .then((response) => {
+        // expect(response.body.length).toBe(4);
+        expect(response.body[1].question_id).toBe(607);
+        expect(response.body[1].answerer_name).toBe("Minnie_Smitham");
+        expect(response.body[1].url).toBe("https://images.unsplash.com/photo-1556304653-cba65c59b3c5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=2761&q=80");
+      });
+  });
+
+});
+
+describe("Test SDC APIs", () => {
+
+  it("should return searched product", async () => {
+    await request(app)
+    .get("/products")
+    .expect(200)
+    .then((response) => {
+        expect(response.body.length).toBe(1);
+        expect(response.body[0].name).toBe("Jennie 50 Trousers");
+    });
+  });
+
+  it("should return searched questions", async () => {
+    await request(app)
+    .get("/qa/questions?product_id=188")
+    .expect(200)
+    .then((response) => {
+        expect(response.body.results.length).toBe(4);
+        expect(response.body.results.[1].question_id).toBe(607);
+        expect(response.body.results.[1].question_body).toBe("Minima itaque quod minus assumenda possimus.");
+    });
+  });
+
+  it("should return searched answers", async () => {
+    await request(app)
+    .get("/qa/questions/607/answers")
+    .expect(200)
+    .then((response) => {
+        expect(response.body.results.length).toBe(3);
+        expect(response.body.results[1].answer_id).toBe(1202);
+        expect(response.body.results[1].answerer_name).toBe("Minnie_Smitham");
     });
   });
 

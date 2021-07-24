@@ -3,7 +3,7 @@ selfnote
 coverage
 
 database
-routes
+sdcMongo.js
 models
 
 .env

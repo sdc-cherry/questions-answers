@@ -77,11 +77,10 @@ const getProducts = async(req, res) => {
 };
 
 
-// # '/qa/questions': questions.jsx. 'qa/questions?product_id=22122&page=1&count=5'
-// app.get('/qa/questions?product_id=28212', db.getQuestions);
 const getQuestions = async(req, res) => {
   try {
-    const queryA = 'select * from answers where question_id=$1 order by id ASC';
+    const queryA = 'SELECT id, body, date_written as date, answerer_name, helpful as helpfulness from answers where question_id=$1 and reported=false order by id ASC';
+    // const queryA = 'select * from answers where question_id=$1 order by id ASC';
     let question_idA, valueA;
 
     let answersPromises = [];
@@ -92,7 +91,8 @@ const getQuestions = async(req, res) => {
     //
     // console.log(req.query);
     let page, count, queryQ, valueQ, offset;
-    let query = 'select * from questions where product_id=$1 and reported=false order by id ASC';
+    // let query = 'select * from questions where product_id=$1 and reported=false order by id ASC';
+    let query = 'SELECT id as question_id, body as question_body, date_written as question_date, asker_name, helpful as question_helpfulness, reported from questions where product_id=$1 and reported=false order by id ASC';
 
     if (!req.query.page) {
       page = 1;
@@ -120,7 +120,7 @@ const getQuestions = async(req, res) => {
     let allQuestions = questions.rows;
 
     for (let i = 0; i < questions.rows.length; i++) {
-      question_idA = questions.rows[i].id;
+      question_idA = questions.rows[i].question_id;
       valueA = [question_idA];
       answersPromises[i] = getAnswersFn(queryA, valueA, true, question_idA);
     };
@@ -128,30 +128,15 @@ const getQuestions = async(req, res) => {
     return Promise.all(answersPromises)
     .then( answersData => {
       allAnswers = answersData.map( (answerData, index) => {
+        // console.log('answerData', answerData.results)
         let convertedAnswer = {};
         answerData.results.forEach( answerD => {
-          convertedAnswer[answerD.answer_id] = {
-            id: answerD.answer_id,
-            body: answerD.body,
-            date: answerD.date,
-            answerer_name: answerD.answerer_name,
-            answerer_email: answerD.answerer_email,
-            helpfulness: answerD.helpfulness,
-            reported: answerD.reported,
-            photos: answerD.photos.map(photo => (photo.url))
-          }
+          console.log('answerD', answerD)
+          convertedAnswer[answerD.id] = answerD;
         } );
         let question = questions.rows[index];
-        convertedQuestions[index] = {
-          question_id: question.id,
-          question_body: question.body,
-          question_date: question.date_written,
-          asker_name: question.asker_name,
-          asker_email: question.asker_email,
-          question_helpfulness: question.helpful,
-          reported: question.reported,
-          answers: convertedAnswer
-        }
+        question.answers = convertedAnswer;
+        convertedQuestions[index] = question;
       } );
       results = {
         product_id: req.query.product_id.toString(),
@@ -213,53 +198,68 @@ const reportQuestion = async(req, res) => {
   }
 };
 
+// const getAnswersFn = async(queryA, valueA, forQestion, question_id, res, page, count, offset) => {
+
+//   const answers = await pool.query(queryA, valueA);
+
+//   pool.query(queryA, valueA)
+//     .then( async(answers) => {
+//       let allAnswers = answers.rows;
+//       for (let answer of allAnswers) {
+//         // let photos = await pool.query('select * from answers_photos where answer_id=$1', [answer.id]);
+//         let photos = await pool.query('select id, url from answers_photos where answer_id=$1', [answer.answer_id]);
+//         answer.photos = photos.rows;
+//       }
+//       // console.log(allAnswers);
+
+//       let results = {
+//         question: question_id.toString(),
+//         page: page,
+//         count: count,
+//         results: allAnswers
+//       };
+//       if (!forQestion) {
+//         res.status(200).send(results);
+//       }
+//       return results;
+//     });
+// };
 
 const getAnswersFn = async(queryA, valueA, forQestion, question_id, res, page, count, offset) => {
   const answers = await pool.query(queryA, valueA);
 
-    let photosPromises = [];
-    let convertedAnswers = [];
-    let results = {};
-    for (let i = 0; i < answers.rows.length; i++) {
-      photosPromises[i] = pool.query('select * from answers_photos where answer_id=$1', [answers.rows[i].id]);
-    };
-    return Promise.all(photosPromises)
-      .then( photosData => {
-        // let allPhotos = photosData.map( photoData => (photoData.rows) )
-        let allPhotos = photosData.map( photoData => {
-          return photoData.rows.map( photoD => {
-            let convertedPhoto = {
-              id: photoD.id,
-              url: photoD.url
-            }
-            return convertedPhoto;
-          } )
-        } );
-        // console.log('allPhotos', allPhotos)
-        convertedAnswers = allPhotos.map((photo, index) => {
-          let answer = answers.rows[index];
-          return {
-            answer_id: answer.id,
-            body: answer.body,
-            date: answer.date_written,
-            answerer_name: answer.answerer_name,
-            answerer_email: answer.answerer_email,
-            helpfulness: answer.helpful,
-            reported: answer.reported,
-            photos: photo
-          }
-        });
-        results = {
-          question: question_id.toString(),
-          page: page,
-          count: count,
-          results: convertedAnswers
-        };
+  let photosPromises = [];
+  let convertedAnswers = [];
+  let results = {};
+  for (let i = 0; i < answers.rows.length; i++) {
+    if (!forQestion) {
+      photosPromises[i] = pool.query('select id, url from answers_photos where answer_id=$1 order by id ASC', [answers.rows[i].answer_id]);
+    } else {
+      photosPromises[i] = pool.query('select id, url from answers_photos where answer_id=$1 order by id ASC', [answers.rows[i].id]);
+    }
+  };
+  return Promise.all(photosPromises)
+    .then( photosData => {
+      convertedAnswers = photosData.map((photo, index) => {
+        let answer = answers.rows[index];
         if (!forQestion) {
-          res.status(200).send(results);
+          answer.photos = photo.rows;
+        } else {
+          answer.photos = photo.rows.map(photo => (photo.url));
         }
-        return results;
-      } )
+        return answer;
+      });
+      results = {
+        question: question_id.toString(),
+        page: page,
+        count: count,
+        results: convertedAnswers
+      };
+      if (!forQestion) {
+        res.status(200).send(results);
+      }
+      return results;
+    } )
 };
 
 // `/qa/questions/${this.props.questionId}/answers`: answerlist.jsx
@@ -267,7 +267,10 @@ const getAnswersFn = async(queryA, valueA, forQestion, question_id, res, page, c
 const getAnswers = async(req, res) => {
   // console.log(req.query);
   let page, count, queryA, valueA, offset;
-  let query = 'select * from answers where question_id=$1 and reported=false order by id ASC';
+  // let query = 'select * from answers where question_id=$1 and reported=false order by id ASC';
+  let query = 'SELECT id as answer_id, body, date_written as date, answerer_name, helpful as helpfulness from answers where question_id=$1 and reported=false order by id ASC';
+
+
   try {
     if (!req.query.page) {
       page = 1;

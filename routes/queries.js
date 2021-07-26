@@ -52,7 +52,10 @@ const getAnswers_photosTb = async(req, res) => {
 
 const getCheckTb = async(req, res) => {
   try {
-    const results = await pool.query('SELECT q.id as q_id, product_id, q.body, q.date_written, asker_name, asker_email, q.reported as q_reported, q.helpful as q_helpful, a.id as a_id, question_id, a.body as a_body, a.date_written as a_date_written, answerer_name, answerer_email, a.reported as a_reported, a.helpful as a_helpful, ap.id as ap_id, answer_id, url FROM questions q INNER JOIN answers a ON question_id = q.id INNER JOIN answers_photos ap ON answer_id = a.id WHERE product_id = 188 ORDER by ap.id ASC;');
+    // const results = await pool.query('SELECT q.id as q_id, product_id, q.body, q.date_written, asker_name, asker_email, q.reported as q_reported, q.helpful as q_helpful, a.id as a_id, question_id, a.body as a_body, a.date_written as a_date_written, answerer_name, answerer_email, a.reported as a_reported, a.helpful as a_helpful, ap.id as ap_id, answer_id, url FROM questions q INNER JOIN answers a ON question_id = q.id INNER JOIN answers_photos ap ON answer_id = a.id WHERE product_id = 188 ORDER by q.id ASC, a.id ASC, ap.id ASC;');
+
+    const results = await pool.query('SELECT q.id as q_id, product_id, q.body, q.date_written, asker_name, asker_email, q.reported as q_reported, q.helpful as q_helpful, a.id as a_id, question_id, a.body as a_body, a.date_written as a_date_written, answerer_name, answerer_email, a.reported as a_reported, a.helpful as a_helpful, ap.id as ap_id, answer_id, url FROM questions q LEFT JOIN answers a ON question_id = q.id LEFT JOIN answers_photos ap ON answer_id = a.id WHERE product_id = 188 ORDER by q.id ASC, a.id ASC, ap.id ASC;');
+
     res.status(200).send(results.rows);
   } catch (err) {
     res.status(500).send({message: err.message});
@@ -87,7 +90,7 @@ const getQuestions = async(req, res) => {
     let results = {};
 
     //
-    console.log(req.query);
+    // console.log(req.query);
     let page, count, queryQ, valueQ, offset;
     let query = 'select * from questions where product_id=$1 and reported=false order by id ASC';
 
@@ -175,7 +178,7 @@ const addQuestion = async(req, res) => {
 
     let newQuestion = await pool.query(query, value);
     // res.status(201).send(`New question added for product_id: ${product_id}`);
-    res.status(201).send(`New question added with ID:${newQuestion.rows[0].id} `);
+    res.status(201).send(`New question added with ID: ${newQuestion.rows[0].id} `);
   } catch (err) {
     res.status(500).send({message: err.message});
     // throw err;
@@ -262,7 +265,7 @@ const getAnswersFn = async(queryA, valueA, forQestion, question_id, res, page, c
 // `/qa/questions/${this.props.questionId}/answers`: answerlist.jsx
 // app.get('/qa/questions/213336/answers', db.getAnswers);
 const getAnswers = async(req, res) => {
-  console.log(req.query);
+  // console.log(req.query);
   let page, count, queryA, valueA, offset;
   let query = 'select * from answers where question_id=$1 and reported=false order by id ASC';
   try {
@@ -303,7 +306,7 @@ const getAnswers = async(req, res) => {
 // }
 const addAnswer = async(req, res) => {
   try {
-    console.log('req.body', req.body);
+    // console.log('req.body', req.body);
     const { body, name, email, photos } = req.body;
     const queryA = 'INSERT INTO answers (question_id, body, answerer_name, answerer_email) VALUES ($1, $2, $3, $4) RETURNING id';
     const valueA = [req.params.question_id, body, name, email];
@@ -315,7 +318,8 @@ const addAnswer = async(req, res) => {
       pool.query(queryP, valueP);
     })
 
-    res.status(201).send(`New answer added for answer_id: ${req.params.question_id}`);
+    // res.status(201).send(`New answer added for answer_id: ${req.params.question_id}`);
+    res.status(201).send(`New answer added with ID: ${newAnswer.rows[0].id}`);
   } catch (err) {
     // res.status(500).send({message: err.message});
     throw err;
@@ -326,7 +330,7 @@ const addAnswer = async(req, res) => {
 // app.put('qa/answers/1992416/helpful', db.likeAnswer);
 const likeAnswer = async(req, res) => {
   try {
-    console.log('req.params.answer_id', req.params.answer_id);
+    // console.log('req.params.answer_id', req.params.answer_id);
     pool.query('UPDATE answers SET helpful=helpful+1 WHERE id=$1', [req.params.answer_id]);
     res.status(204).send(`Liked answer_id: ${req.params.answer_id}`);
   } catch (err) {
@@ -339,7 +343,7 @@ const likeAnswer = async(req, res) => {
 // app.put('qa/answers/1992415/report', db.reportAnswer);
 const reportAnswer = async(req, res) => {
   try {
-    console.log('req.params.answer_id', req.params.answer_id);
+    // console.log('req.params.answer_id', req.params.answer_id);
     pool.query('UPDATE answers SET reported=true WHERE id=$1', [req.params.answer_id]);
     res.status(204).send(`Reported answer_id: ${req.params.answer_id}`);
   } catch (err) {

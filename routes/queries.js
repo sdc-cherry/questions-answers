@@ -111,8 +111,6 @@ const getQuestions = async(req, res) => {
     queryQ = query + ' limit $2' + offset;
     let product_id = req.query.product_id;
     valueQ = [req.query.product_id, count];
-    // getAnswersFn(queryQ, valueQ, false, question_idA, res, page, count, offset);
-    //
 
     const questions = await pool.query(queryQ, valueQ);
     let allQuestions = questions.rows;
@@ -123,39 +121,8 @@ const getQuestions = async(req, res) => {
       answersPromises[i] = getAnswersFn(queryA, valueA, true, question_idA);
     };
 
-    // return Promise.all(answersPromises)
-    // .then( answersData => {
-    //   allAnswers = answersData.map( (answerData, index) => {
-    //     // console.log('answerData', answerData.results)
-    //     let convertedAnswer = {};
-    //     answerData.results.forEach( answerD => {
-    //       console.log('answerD', answerD)
-    //       convertedAnswer[answerD.id] = answerD;
-    //     } );
-    //     let question = questions.rows[index];
-    //     question.answers = convertedAnswer;
-    //     convertedQuestions[index] = question;
-    //   } );
-    //   results = {
-    //     product_id: req.query.product_id.toString(),
-    //     results: convertedQuestions
-    //   };
-    //   res.status(200).send(results);
-    // })
-
     return Promise.all(answersPromises)
     .then( answersData => {
-      // allAnswers = answersData.map( (answerData, index) => {
-      //   // console.log('answerData', answerData.results)
-      //   // let convertedAnswer = {};
-      //   // answerData.results.forEach( answerD => {
-      //   //   console.log('answerD', answerD)
-      //   //   convertedAnswer[answerD.id] = answerD;
-      //   // } );
-      //   let question = questions.rows[index];
-      //   question.answers = answersData;
-      //   convertedQuestions[index] = question;
-      // } );
       results = {
         product_id: req.query.product_id.toString(),
         results: questions.rows.map((question, index)=>{
@@ -221,12 +188,50 @@ const reportQuestion = async(req, res) => {
 };
 
 
+
+// const getAnswersFn = async(queryA, valueA, forQestion, question_id, res, page, count, offset) => {
+//   const answers = await pool.query(queryA, valueA);
+
+//   let photosPromises = [];
+//   let convertedAnswers = [];
+//   let results = {};
+//   let convertedAnswersObj = {};
+//   for (let i = 0; i < answers.rows.length; i++) {
+//     let query = 'select id, url from answers_photos where answer_id=$1 order by id ASC';
+//     if (!forQestion) {
+//       let checkphotos = await pool.query(query, [answers.rows[i].answer_id]);
+//       answers.rows[i].photos = checkphotos.rows;
+//     } else {
+//       let checkphotos = await pool.query(query, [answers.rows[i].id]);
+//       answers.rows[i].photos = checkphotos.rows.map(photo => (photo.url));
+//       convertedAnswersObj[answers.rows[i].id] = answers.rows[i];
+//     }
+//   };
+
+//   if (!forQestion) {
+//     ans = answers.rows;
+//   } else {
+//     ans = convertedAnswersObj;
+//   }
+//   results = {
+//     question: question_id.toString(),
+//     page: page,
+//     count: count,
+//     results: ans
+//   };
+//   if (!forQestion) {
+//     res.status(200).send(results);
+//   }
+//   return results;
+// };
+
 const getAnswersFn = async(queryA, valueA, forQestion, question_id, res, page, count, offset) => {
   const answers = await pool.query(queryA, valueA);
 
   let photosPromises = [];
   let convertedAnswers = [];
   let results = {};
+  let answerResults;
   for (let i = 0; i < answers.rows.length; i++) {
     let query = 'select id, url from answers_photos where answer_id=$1 order by id ASC';
     if (!forQestion) {
@@ -250,15 +255,15 @@ const getAnswersFn = async(queryA, valueA, forQestion, question_id, res, page, c
         return answer;
       });
       if (!forQestion) {
-        ans = convertedAnswers;
+        answerResults = convertedAnswers;
       } else {
-        ans = convertedAnswersObj;
+        answerResults = convertedAnswersObj;
       }
       results = {
         question: question_id.toString(),
         page: page,
         count: count,
-        results: ans
+        results: answerResults
       };
       if (!forQestion) {
         res.status(200).send(results);

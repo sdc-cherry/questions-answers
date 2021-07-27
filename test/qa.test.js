@@ -14,6 +14,7 @@ const server = require('../server/index.js');
 
 // jest.setTimeout(15000);
 const fs = require('fs').promises;
+let newQuestionId, newAnswerId;
 
 describe("Test DB and Relations", () => {
 

@@ -53,14 +53,19 @@ const getAnswers_photosTb = async(req, res) => {
 const getCheckTb = async(req, res) => {
   try {
 
+    // array+json agg for questions. takse 10s. similar to promise.
+    // const results = await pool.query("SELECT q.id as question_id, q.body as question_body, q.date_written as question_date, asker_name, q.helpful as question_helpfulness, q.reported as reported, COALESCE(json_agg(JSONB_BUILD_OBJECT('id', aap.answer_id, 'body', aap.body, 'date', aap.date, 'answerer_name', aap.answerer_name, 'helpfulness', aap.helpfulness, 'photos', aap.photos) order by aap.answer_id) filter (where aap.answer_id is not null) , '[]') as answers FROM questions q LEFT JOIN (SELECT a.id as answer_id, question_id, body, date_written as date, answerer_name, helpful as helpfulness, COALESCE(array_agg(ap.url order by ap.id) filter (where ap.id is not null) , '{}') as photos FROM answers a LEFT JOIN answers_photos ap on ap.answer_id=a.id WHERE reported=false group by a.id order by a.id) aap ON q.id=aap.question_id WHERE product_id=188 and q.reported=false GROUP by q.id;");
 
+    // json_agg -- doesn't allow nested agg
+    // const results = await pool.query("SELECT q.id as question_id, q.body as question_body, q.date_written as question_date, asker_name, q.helpful as question_helpfulness, q.reported as reported, COALESCE(json_agg(JSON_BUILD_OBJECT('a_id', a.id, 'body', a.body, 'date', a.date_written, 'answerer_name', a.answerer_name, 'helpfulness', a.helpful, 'photos', COALESCE(array_agg(ap.url order by ap.id) filter (where ap.id is not null) , '{}')) order by a.id) filter (where a.id is not null) , '[]') as answers FROM questions q LEFT JOIN answers a ON q.id=a.question_id and a.reported=false LEFT JOIN (select id, url, answer_id from answers_photos) ap on a.id=ap.answer_id WHERE product_id=188 and q.reported=false GROUP by q.id;");
 
+    // const results = await pool.query("SELECT q.id as question_id, q.body as question_body, q.date_written as question_date, asker_name, q.helpful as question_helpfulness, q.reported as reported, COALESCE(json_agg(JSONB_BUILD_OBJECT('a_id', a.id, 'body', a.body, 'date', a.date_written, 'answerer_name', a.answerer_name, 'helpfulness', a.helpful, 'photosF', a.reported) order by a.id) filter (where a.id is not null) , '[]') as answers FROM questions q LEFT JOIN answers a ON q.id=a.question_id and a.reported=false WHERE product_id=188 and q.reported=false GROUP by q.id;");
 
     // array_agg with offset limit
-    const results = await pool.query("WITH q AS (select * from questions WHERE product_id=188 and reported=false order by id LIMIT 30 OFFSET 0) SELECT q.id as question_id, q.body as question_body, q.date_written as question_date, asker_name, q.helpful as question_helpfulness, q.reported as reported, question_id as a_question_id, a.id as id, a.body as body, a.date_written as date, answerer_name as answerer_name, a.helpful as helpfulness, a.reported as a_reported, COALESCE(array_agg(ap.url order by ap.id) filter (where ap.id is not null) , '{}') as photos FROM q LEFT JOIN answers a ON q.id=question_id and a.reported=false LEFT JOIN (select id, url, answer_id from answers_photos) ap on a.id=answer_id GROUP by q.id, q.body, q.date_written, q.asker_name, q.helpful, q.reported, a.id;");
+    // const results = await pool.query("WITH q AS (select * from questions WHERE product_id=188 and reported=false order by id LIMIT 30 OFFSET 0) SELECT q.id as question_id, q.body as question_body, q.date_written as question_date, asker_name, q.helpful as question_helpfulness, q.reported as reported, question_id as a_question_id, a.id as id, a.body as body, a.date_written as date, answerer_name as answerer_name, a.helpful as helpfulness, a.reported as a_reported, COALESCE(array_agg(ap.url order by ap.id) filter (where ap.id is not null) , '{}') as photos FROM q LEFT JOIN answers a ON q.id=question_id and a.reported=false LEFT JOIN (select id, url, answer_id from answers_photos) ap on a.id=answer_id GROUP by q.id, q.body, q.date_written, q.asker_name, q.helpful, q.reported, a.id;");
 
-    // array_agg
-    // const results = await pool.query("SELECT q.id as question_id, q.body as question_body, q.date_written as question_date, asker_name, q.helpful as question_helpfulness, q.reported as reported, question_id as a_question_id, a.id as id, a.body as body, a.date_written as date, answerer_name as answerer_name, a.helpful as helpfulness, a.reported as a_reported, COALESCE(array_agg(ap.url order by ap.id) filter (where ap.id is not null) , '{}') as photos FROM questions q LEFT JOIN answers a ON q.id=question_id and a.reported=false LEFT JOIN (select id, url, answer_id from answers_photos) ap on a.id=answer_id WHERE product_id=188 and q.reported=false GROUP by q.id, a.id;");
+    // array_agg  FOR TESTING TOO
+    const results = await pool.query("SELECT q.id as question_id, q.body as question_body, q.date_written as question_date, asker_name, q.helpful as question_helpfulness, q.reported as reported, question_id as a_question_id, a.id as id, a.body as body, a.date_written as date, answerer_name as answerer_name, a.helpful as helpfulness, a.reported as a_reported, COALESCE(array_agg(ap.url order by ap.id) filter (where ap.id is not null) , '{}') as photos FROM questions q LEFT JOIN answers a ON q.id=question_id and a.reported=false LEFT JOIN (select id, url, answer_id from answers_photos) ap on a.id=answer_id WHERE product_id=188 and q.reported=false GROUP by q.id, a.id;");
 
     // use group by
     // const results = await pool.query('SELECT q.id as question_id, q.body as question_body, q.date_written as question_date, asker_name, q.helpful as question_helpfulness, q.reported as reported, question_id as a_question_id, a.id as id, a.body as body, a.date_written as date, answerer_name as answerer_name, a.helpful as helpfulness, a.reported as a_reported, ap.id as ap_id, answer_id as ap_answer_id, url FROM questions q LEFT JOIN answers a ON q.id=question_id and a.reported=false LEFT JOIN answers_photos ap ON a.id=answer_id WHERE product_id=188 and q.reported=false GROUP by q.id, a.id, ap.id;');
@@ -87,9 +92,10 @@ const getCheckTb = async(req, res) => {
 
     // const results = await pool.query('SELECT a.id as answer_id, question_id, body, date_written as date, answerer_name, helpful as helpfulness, ap.id as ap_id, ap.answer_id as ap_answer_id, url FROM answers a LEFT JOIN answers_photos ap ON ap.answer_id=a.id WHERE question_id=606 and reported=false group by a.id, ap.id;');
 
-    // COALESCE(array_agg(ap.url order by ap.id) filter (where ap.id is not null) , '{}') as photos
-
     // const results = await pool.query("SELECT a.id as answer_id, question_id, body, date_written as date, answerer_name, helpful as helpfulness, json_agg(JSON_BUILD_OBJECT('id', ap.id, 'answer_id', ap.answer_id, 'url', ap.url) order by ap.id) as photos FROM answers a LEFT JOIN answers_photos ap on ap.answer_id=a.id WHERE question_id=606 and reported=false group by a.id order by a.id;");
+
+    // array_agg
+    // const results = await pool.query("SELECT a.id as answer_id, question_id, body, date_written as date, answerer_name, helpful as helpfulness, COALESCE(array_agg(ap.url order by ap.id) filter (where ap.id is not null) , '{}') as photos FROM answers a LEFT JOIN answers_photos ap on ap.answer_id=a.id WHERE question_id=606 and reported=false group by a.id order by a.id;");
 
     // const results = await pool.query('WITH a AS (SELECT * from answers where question_id=606 AND reported=false GROUP by id LIMIT 20 OFFSET 0) SELECT * from a;');
 
@@ -159,6 +165,9 @@ const getQuestions = async(req, res) => {
     // // // using offset, limit. slightly slower when set a limit/offset on API
     // let queryQ = "WITH q AS (select * from questions WHERE product_id=$1 and reported=false order by id LIMIT $2 OFFSET $3) SELECT q.id as question_id, q.body as question_body, q.date_written as question_date, asker_name, q.helpful as question_helpfulness, q.reported as reported, question_id as a_question_id, a.id as id, a.body as body, a.date_written as date, answerer_name as answerer_name, a.helpful as helpfulness, a.reported as a_reported, COALESCE(array_agg(ap.url order by ap.id) filter (where ap.id is not null) , '{}') as photos FROM q LEFT JOIN answers a ON q.id=question_id and a.reported=false LEFT JOIN (select * from answers_photos) ap on a.id=answer_id GROUP by q.id, q.body, q.date_written, q.asker_name, q.helpful, q.reported, a.id;";
     // let valueQ = [req.query.product_id, count, offset];
+
+    // // array+json agg for questions. takse 10s. similar to promise.
+    // const results = await pool.query("SELECT q.id as question_id, q.body as question_body, q.date_written as question_date, asker_name, q.helpful as question_helpfulness, q.reported as reported, COALESCE(json_agg(JSONB_BUILD_OBJECT('id', aap.answer_id, 'body', aap.body, 'date', aap.date, 'answerer_name', aap.answerer_name, 'helpfulness', aap.helpfulness, 'photos', aap.photos) order by aap.answer_id) filter (where aap.answer_id is not null) , '[]') as answers FROM questions q LEFT JOIN (SELECT a.id as answer_id, question_id, body, date_written as date, answerer_name, helpful as helpfulness, COALESCE(array_agg(ap.url order by ap.id) filter (where ap.id is not null) , '{}') as photos FROM answers a LEFT JOIN answers_photos ap on ap.answer_id=a.id WHERE reported=false group by a.id order by a.id) aap ON q.id=aap.question_id WHERE product_id=188 and q.reported=false GROUP by q.id;");
 
     let product_id = req.query.product_id;
 
@@ -262,55 +271,55 @@ const reportQuestion = async(req, res) => {
 };
 
 
-// postgres left join      // use left join query
-const getAnswersFn = async(queryA, question_id, forQestion, res, page, count, offset) => {
-  const answers = await pool.query(queryA, [question_id]);
-  // console.log('answers', answers)
-  let answerResults = [];
-  let prevAnswerId, currAnswer, currAnswerId, currPhoto;
+// // postgres left join      // use left join query
+// const getAnswersFn = async(queryA, question_id, forQestion, res, page, count, offset) => {
+//   const answers = await pool.query(queryA, [question_id]);
+//   // console.log('answers', answers)
+//   let answerResults = [];
+//   let prevAnswerId, currAnswer, currAnswerId, currPhoto;
 
-  for (let i = 0; i < answers.rows.length; i++) {
+//   for (let i = 0; i < answers.rows.length; i++) {
 
-    currAnswerId = answers.rows[i].answer_id;
+//     currAnswerId = answers.rows[i].answer_id;
 
-    if (currAnswerId === prevAnswerId) {
-      currAnswer.photos.push({
-        id: answers.rows[i].ap_id,
-        url: answers.rows[i].url
-      });
-    } else {
-      if (i !== 0) {
-        answerResults.push(currAnswer);
-      }
-      if (!answers.rows[i].ap_id) {
-        currPhoto = []
-      } else {
-        currPhoto = [{
-          id: answers.rows[i].ap_id,
-          url: answers.rows[i].url
-        }];
-      }
-      currAnswer = convertAnswerFormat(answers.rows[i], 'answer_id', currPhoto);
-    }
-    prevAnswerId = currAnswerId;
-    if (i === answers.rows.length - 1) {
-      // console.log('here', currAnswer);
-      answerResults.push(currAnswer);
-    }
-  }
+//     if (currAnswerId === prevAnswerId) {
+//       currAnswer.photos.push({
+//         id: answers.rows[i].ap_id,
+//         url: answers.rows[i].url
+//       });
+//     } else {
+//       if (i !== 0) {
+//         answerResults.push(currAnswer);
+//       }
+//       if (!answers.rows[i].ap_id) {
+//         currPhoto = []
+//       } else {
+//         currPhoto = [{
+//           id: answers.rows[i].ap_id,
+//           url: answers.rows[i].url
+//         }];
+//       }
+//       currAnswer = convertAnswerFormat(answers.rows[i], 'answer_id', currPhoto);
+//     }
+//     prevAnswerId = currAnswerId;
+//     if (i === answers.rows.length - 1) {
+//       // console.log('here', currAnswer);
+//       answerResults.push(currAnswer);
+//     }
+//   }
 
-  let allAnswerResults = answerResults.slice(offset, offset + count);
+//   let allAnswerResults = answerResults.slice(offset, offset + count);
 
-  let results = {
-    question: question_id.toString(),
-    page: page,
-    count: count,
-    results: allAnswerResults
-    // results: answerResults
-  };
+//   let results = {
+//     question: question_id.toString(),
+//     page: page,
+//     count: count,
+//     results: allAnswerResults
+//     // results: answerResults
+//   };
 
-  res.status(200).send(results);
-};
+//   res.status(200).send(results);
+// };
 
 
 // `/qa/questions/${this.props.questionId}/answers`: answerlist.jsx

@@ -1,29 +1,29 @@
 import http from 'k6/http';
 import { check, sleep } from 'k6';
 
-// export let options = {
-//   discardResponseBodies: true,
-//   scenarios: {
-//     contacts: {
-//       executor: 'constant-arrival-rate',
-//       rate: 1, // RPS, since timeUnit is the default 1s. Can adjust timeUnit.
-//       // timeUnit: '1s',
-//       duration: '1m',
-//       preAllocatedVUs: 50,
-//       maxVUs: 1000,  // needs to be high enough for rate
-//     },
-//   },
-// };
+export let options = {
+  discardResponseBodies: true,
+  scenarios: {
+    contacts: {
+      executor: 'constant-arrival-rate',
+      rate: 1, // RPS, since timeUnit is the default 1s. Can adjust timeUnit.
+      // timeUnit: '1s',
+      duration: '1m',
+      preAllocatedVUs: 50,
+      maxVUs: 1000,  // needs to be high enough for rate
+    },
+  },
+};
 
 
-// // getQuestions
-// export default function () {
-//   let max = 1000000;  // product_id for resQ
-//   let min = 900000;   // product_id for resQ
-//   let i = parseInt(Math.random() * (max - min) + min);
-//   let resQ = http.get(`http://localhost:3030/qa/questions?product_id=${i}`);
-//   check(resQ, { 'getQuestions status was 200': (r) => r.status == 200 });
-// }
+// getQuestions
+export default function () {
+  let max = 1000000;  // product_id for resQ
+  let min = 900000;   // product_id for resQ
+  let i = parseInt(Math.random() * (max - min) + min);
+  let resQ = http.get(`http://localhost:3030/qa/questions?product_id=${i}`);
+  check(resQ, { 'getQuestions status was 200': (r) => r.status == 200 });
+}
 
 // // getAnswers
 // export default function () {
@@ -123,25 +123,13 @@ import { check, sleep } from 'k6';
 // // // update answers set helpful=0 where id>6879498;
 
 
-// Report Answer
-export let options = {
-  discardResponseBodies: true,
-  scenarios: {
-    contacts: {
-      executor: 'constant-arrival-rate',
-      rate: 1000, // RPS, since timeUnit is the default 1s. Can adjust timeUnit.
-      duration: '1m',
-      preAllocatedVUs: 50,
-      maxVUs: 1000,  // needs to be high enough for rate
-    },
-  },
-};
-export default function () {
-  let max = 7012268;  // answer_id for resA
-  let min = 6879547;   // answer_id for resA
-  let i = parseInt(Math.random() * (max - min) + min);
-  let resA = http.put(`http://localhost:3030/qa/answers/${i}/report`);
-  check(resA, { 'reportAnswer status was 204': (r) => r.status == 204 });
-}
-// // SELECT (select count(*) from answers where id>6879498 and reported=true) as new_reported_a;
-// // // update answers set reported=false where id>6879498;
+// // Report Answer
+// export default function () {
+//   let max = 7012268;  // answer_id for resA
+//   let min = 6879547;   // answer_id for resA
+//   let i = parseInt(Math.random() * (max - min) + min);
+//   let resA = http.put(`http://localhost:3030/qa/answers/${i}/report`);
+//   check(resA, { 'reportAnswer status was 204': (r) => r.status == 204 });
+// }
+// // // SELECT (select count(*) from answers where id>6879498 and reported=true) as new_reported_a;
+// // // // update answers set reported=false where id>6879498;

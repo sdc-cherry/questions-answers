@@ -7,3 +7,5 @@ sdcMongo.js
 models
 
 .env
+newrelic.js
+newrelic_agent.log

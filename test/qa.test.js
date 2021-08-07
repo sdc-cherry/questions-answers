@@ -118,7 +118,7 @@ describe("Test SDC APIs", () => {
     .send(newQuestion)
     .expect(201)
     .then((response) => {
-      expect(response.text).toContain("New question added with ID: 351");
+      expect(response.text).toContain("New question added with ID: ");
       newQuestionId = response.text.split(':')[1];
       // console.log('newQuestionId', newQuestionId, typeof(newQuestionId));
       fs.writeFile('./test/output.txt', newQuestionId, (err) => {
@@ -173,7 +173,7 @@ describe("Test SDC APIs", () => {
     .send(newAnswer)
     .expect(201)
     .then((response) => {
-      expect(response.text).toContain("New answer added with ID: 687");
+      expect(response.text).toContain("New answer added with ID: ");
       newAnswerId = response.text.split(':')[1];
       // console.log('newQuestionId', newAnswerId, typeof(newAnswerId));
       fs.writeFile('./test/output.txt', newAnswerId, (err) => {

@@ -70,8 +70,8 @@ describe("Test DB and Relations", () => {
       .then((response) => {
         // expect(response.body.length).toBe(4);
         expect(response.body[0].question_id).toBe(606);
-        expect(response.body[0].answerer_name).toBe("Robb.Bogisich53");
-        expect(response.body[0].photos[0]).toBe("https://images.unsplash.com/photo-1485646979142-d4abb57a876f?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=2089&q=80");
+        expect(response.body[0].answers[0].answerer_name).toBe("Robb.Bogisich53");
+        expect(response.body[0].answers[0].photos[0]).toBe("https://images.unsplash.com/photo-1485646979142-d4abb57a876f?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=2089&q=80");
         // expect(response.body[0].url).toBe("https://images.unsplash.com/photo-1485646979142-d4abb57a876f?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=2089&q=80");
       });
   });

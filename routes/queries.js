@@ -1,13 +1,13 @@
 // const dbName = 'sdctest';
-const dbName = 'sdc';
+// const dbName = 'sdc';
 
 // const { Pool, Client } = require('pg');
 const Pool = require('pg').Pool;
 const pool = new Pool({
-  user: 'Sharpless',
+  user: process.env.POSTGRES_USER,
   host: 'localhost',
-  database: dbName,
-  password: process.env.DB_PASSWORD,
+  database: process.env.POSTGRES_DB,
+  password: process.env.POSTGRES_PASSWORD,
   port: 5432,
 });
 
@@ -16,7 +16,7 @@ const pool = new Pool({
 
 const getProductTb = async(req, res) => {
   try {
-    const results = await pool.query('select * from product where id=188');
+    const results = await pool.query('select * from product where id=1');
     res.status(200).send(results.rows);
   } catch (err) {
     res.status(500).send({message: err.message});

@@ -8,16 +8,16 @@
 -- \i ./routes/schematest.sql;
 -- \i schematest.sql;
 \l
-DROP DATABASE IF EXISTS sdctest;
-CREATE DATABASE sdctest;
-\c sdctest;
+DROP DATABASE IF EXISTS sdc;
+CREATE DATABASE sdc;
+\c sdc;
 
 CREATE TABLE product (
-	id serial PRIMARY KEY,
-	name VARCHAR ( 50 ),
-	slogan text,
-	description text,
-	category VARCHAR ( 50 ),
+  id serial PRIMARY KEY,
+  name VARCHAR ( 50 ),
+  slogan text,
+  description text,
+  category VARCHAR ( 50 ),
   default_price real
 );
 

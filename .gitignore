@@ -6,5 +6,5 @@ database
 sdcMongo.js
 models
 
-.env
+# .env
 newrelic_agent.log

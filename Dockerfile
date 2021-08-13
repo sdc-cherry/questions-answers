@@ -17,6 +17,7 @@ COPY package.json .
 RUN npm install
 
 COPY . .
+# COPY ./sql my-db
 EXPOSE 3030
 
 CMD ["npm", "start"]

@@ -8,6 +8,7 @@
 -- \i ./routes/schema.sql;
 -- \i schema.sql;
 \l
+\c postgres
 DROP DATABASE IF EXISTS sdc;
 CREATE DATABASE sdc;
 \c sdc;

@@ -35,5 +35,6 @@ services:
     volumes:
       - my-db:/var/lib/postgresql/data
       - ./sql/1createtbs.sql:/docker-entrypoint-initdb.d/1createtbs.sql
+      # - ./sql/schematest.sql:/docker-entrypoint-initdb.d/schematest.sql
 volumes:
   my-db:

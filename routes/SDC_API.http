@@ -128,7 +128,7 @@ PUT http://localhost:3030/qa/questions/3518986/report
 # `/qa/questions/${this.props.questionId}/answers`: answerlist.jsx
 # ?page=1&count=3
 ###
-GET http://localhost:3030/qa/questions/606/answers?page=2&count=3
+GET http://localhost:3030/qa/questions/606/answers
 
 # `/qa/questions/${this.props.questionId}/answers`: addAnswerModal.jsx
 # "https://api.cloudinary.com/v1_1/hrrpp28fec/image/upload"

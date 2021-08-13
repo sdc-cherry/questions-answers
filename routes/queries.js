@@ -5,7 +5,11 @@
 const Pool = require('pg').Pool;
 const pool = new Pool({
   user: process.env.POSTGRES_USER,
-  host: 'localhost',
+  // host: 'host.docker.internal',   // doesn't work. got from stackoverflow
+  // host: 'questions-api_web',   // doesn't work with image name.
+  // host: 'questions-api_db_1',   // working with container name.
+  host: 'db',    // working with compose.yml DB name.
+  // host: 'localhost', // not working for docker. workes for local but not necessory
   database: process.env.POSTGRES_DB,
   password: process.env.POSTGRES_PASSWORD,
   port: 5432,
@@ -15,9 +19,13 @@ const pool = new Pool({
 // Check DB and Relations //
 
 const getProductTb = async(req, res) => {
+  // res.send('u c me?')
   try {
-    const results = await pool.query('select * from product where id=1');
+    const results = await pool.query('select * from product where id<10');
+    // const results = await pool.query('select * from product where id=1');
+    // const results = await pool.query('select * from product where id=188');
     res.status(200).send(results.rows);
+
   } catch (err) {
     res.status(500).send({message: err.message});
   }
@@ -69,7 +77,9 @@ const getCheckTb = async(req, res) => {
 // app.get('/products', db.getProducts);
 const getProducts = async(req, res) => {
   try {
-    const results = await pool.query('select * from product where id=188');
+    const results = await pool.query('select * from product where id<10');
+    // const results = await pool.query('select * from product where id=1');
+    // const results = await pool.query('select * from product where id=188');
     res.status(200).send(results.rows);
   } catch (err) {
     res.status(500).send({message: err.message});

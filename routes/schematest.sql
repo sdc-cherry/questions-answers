@@ -8,6 +8,7 @@
 -- \i ./routes/schematest.sql;
 -- \i schematest.sql;
 \l
+\c postgres
 DROP DATABASE IF EXISTS sdc;
 CREATE DATABASE sdc;
 \c sdc;

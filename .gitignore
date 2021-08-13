@@ -3,7 +3,8 @@ selfnote
 coverage
 
 database
-routes
+sdcMongo.js
 models
 
 .env
+newrelic_agent.log

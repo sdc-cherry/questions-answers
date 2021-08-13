@@ -1,0 +1,154 @@
+# product
+###
+GET https://app-hrsei-api.herokuapp.com/api/fec2/hr-rpp/products
+Authorization: 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
+
+
+# '/qa/questions': questions.jsx.
+# &page=1&count=3
+###
+GET https://app-hrsei-api.herokuapp.com/api/fec2/hr-rpp/qa/questions?product_id=28213
+Authorization: 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
+
+
+# '/qa/questions': addQuestion.jsx
+###
+POST https://app-hrsei-api.herokuapp.com/api/fec2/hr-rpp/qa/questions?product_id=28212
+Authorization: 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
+Content-Type: application/json
+
+{
+    "product_id": 28212,
+    "body": "Is it from France?",
+    "name": "Asker",
+    "email": "asker@gmail.com"
+}
+
+# `/qa/questions/${this.props.questionId}/answers`: answerlist.jsx
+# ?page=1&count=3
+###
+GET https://app-hrsei-api.herokuapp.com/api/fec2/hr-rpp/qa/questions/213336/answers
+Authorization: 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
+
+
+# `/qa/questions/${this.props.questionId}/answers`: addAnswerModal.jsx
+# "https://api.cloudinary.com/v1_1/hrrpp28fec/image/upload"
+###
+POST https://app-hrsei-api.herokuapp.com/api/fec2/hr-rpp/qa/questions/213336/answers
+Authorization: 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
+Content-Type: application/json
+
+{
+    "body": "Teeeeest answer to be posted",
+    "name": "Answer person",
+    "email": "answerer@gmail.com",
+    "photos": []
+}
+
+
+
+
+# `/qa/questions/${this.props.question.question_id}/helpful`: questionsEntry.jsx
+###
+PUT https://app-hrsei-api.herokuapp.com/api/fec2/hr-rpp/qa/questions/213336/helpful
+Authorization: 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
+
+# `/qa/questions/${this.props.question.question_id}/report`: questionsEntry.jsx
+###
+PUT https://app-hrsei-api.herokuapp.com/api/fec2/hr-rpp/qa/questions/232306/report
+Authorization: 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
+
+
+# `/qa/answers/${this.props.answer.answer_id}/helpful`: answerEntry.jsx
+###
+PUT https://app-hrsei-api.herokuapp.com/api/fec2/hr-rpp/qa/answers/1992416/helpful
+Authorization: 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
+
+# `/qa/answers/${this.props.answer.answer_id}/report`: answerEntry.jsx
+###
+PUT https://app-hrsei-api.herokuapp.com/api/fec2/hr-rpp/qa/answers/1992415/report
+Authorization: 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
+
+
+# TEST DB #####################################
+
+###
+GET http://localhost:3030/sdc/product
+
+###
+GET http://localhost:3030/sdc/questions
+
+###
+GET http://localhost:3030/sdc/answers
+
+###
+GET http://localhost:3030/sdc/answers_photos
+
+[
+  {
+    "id": 351,
+    "answer_id": 1202,
+    "url": "https://images.unsplash.com/photo-1556304653-cba65c59b3c5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=2761&q=80"
+  }
+]
+
+###
+GET http://localhost:3030/sdc/check
+
+
+# ACTUAL API #####################################
+
+###
+GET http://localhost:3030/products
+
+# &page=1&count=3
+###
+GET http://localhost:3030/qa/questions?product_id=188&page
+
+# '/qa/questions': addQuestion.jsx
+###
+POST http://localhost:3030/qa/questions?product_id=188
+Content-Type: application/json
+
+{
+    "product_id": 188,
+    "body": "Is it from France???",
+    "name": "Asker",
+    "email": "asker@gmail.com"
+}
+
+# `/qa/questions/${this.props.question.question_id}/helpful`: questionsEntry.jsx
+###
+PUT http://localhost:3030/qa/questions/3519013/helpful
+
+# `/qa/questions/${this.props.question.question_id}/report`: questionsEntry.jsx
+###
+PUT http://localhost:3030/qa/questions/3518986/report
+
+# `/qa/questions/${this.props.questionId}/answers`: answerlist.jsx
+# ?page=1&count=3
+###
+GET http://localhost:3030/qa/questions/606/answers
+
+# `/qa/questions/${this.props.questionId}/answers`: addAnswerModal.jsx
+# "https://api.cloudinary.com/v1_1/hrrpp28fec/image/upload"
+# select * from answers_photos where answer_id=6879310;
+###
+POST http://localhost:3030/qa/questions/3518987/answers
+Content-Type: application/json
+
+{
+    "body": "Teeeeest answer to be posted",
+    "name": "Answer person",
+    "email": "answerer@gmail.com",
+    "photos": ["https://1test", "https://2test", "https://3test"]
+}
+
+
+# `/qa/answers/${this.props.answer.answer_id}/helpful`: answerEntry.jsx
+###
+PUT http://localhost:3030/qa/answers/6879317/helpful
+
+# `/qa/answers/${this.props.answer.answer_id}/report`: answerEntry.jsx
+###
+PUT http://localhost:3030/qa/answers/6879317/report

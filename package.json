@@ -22,10 +22,13 @@
   "dependencies": {
     "express": "^4.17.1",
     "mongoose": "^5.13.3",
+    "nodemon": "^2.0.12",
     "pg": "^8.6.0"
   },
   "devDependencies": {
+    "dotenv": "^10.0.0",
     "jest": "^27.0.6",
+    "newrelic": "^8.1.0",
     "supertest": "^6.1.3"
   }
 }
